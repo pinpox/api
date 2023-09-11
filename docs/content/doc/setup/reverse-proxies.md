@@ -45,7 +45,7 @@ server {
         index  index.html index.htm;
     }
     
-    location ~* ^/(api|dav|\.well-known)/ {
+    location ~* ^/(api|auth|dav|\.well-known)/ {
         proxy_pass http://localhost:3456;
         client_max_body_size 20M;
     }
@@ -69,7 +69,7 @@ server {
         index  index.html index.htm;
     }
     
-    location ~* ^/(api|dav|\.well-known)/ {
+    location ~* ^/(api|auth|dav|\.well-known)/ {
         proxy_pass http://localhost:3456;
         client_max_body_size 20M;
     }
@@ -88,7 +88,7 @@ server {
 4. From the command line, enter `sudo docker exec -it [NGINX-PM container name] /bin/bash` and navigate to the proxy hosts folder where the `.conf` files are stashed. Probably `/data/nginx/proxy_host`. (This folder is a persistent folder created in the NPM container and mounted by NPM.)
 5. Locate the `.conf` file where the server_name inside the file matches your Vikunja Proxy Host. Once found, add the following code, unchanged, just above the existing location block in that file. (They are listed by number, not name.)
 ```nginx
-location ~* ^/(api|dav|\.well-known)/ {
+location ~* ^/(api|auth|dav|\.well-known)/ {
 		proxy_pass http://api:3456;
 		client_max_body_size 20M;
 	}
@@ -110,6 +110,8 @@ Put the following config in `cat /etc/apache2/sites-available/vikunja.conf`:
     </Proxy>
     ProxyPass /api http://localhost:3456/api
     ProxyPassReverse /api http://localhost:3456/api
+    ProxyPass /auth http://localhost:3456/auth
+    ProxyPassReverse /auth http://localhost:3456/auth
     ProxyPass /dav http://localhost:3456/dav
     ProxyPassReverse /dav http://localhost:3456/dav
     ProxyPass /.well-known http://localhost:3456/.well-known
@@ -117,7 +119,7 @@ Put the following config in `cat /etc/apache2/sites-available/vikunja.conf`:
 
     DocumentRoot /var/www/html
     RewriteEngine On
- 	RewriteRule ^\/?(favicon\.ico|assets|audio|fonts|images|manifest\.webmanifest|robots\.txt|sw\.js|workbox-.*|api|dav|\.well-known) - [L]
+ 	RewriteRule ^\/?(favicon\.ico|assets|audio|fonts|images|manifest\.webmanifest|robots\.txt|sw\.js|workbox-.*|api|auth|dav|\.well-known) - [L]
     RewriteRule ^(.*)$ /index.html [QSA,L]
 </VirtualHost>
 {{< /highlight >}}
@@ -131,7 +133,7 @@ For more details see the [frontend apache configuration]({{< ref "install-fronte
 {{< highlight conf >}}
 vikunja.domainname.tld {
 	@paths {
-		path /api/* /.well-known/* /dav/*
+		path /api/* /auth/* /.well-known/* /dav/*
 	}
 	handle @paths {
 		reverse_proxy 127.0.0.1:3456
